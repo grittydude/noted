@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:todo/data/database.dart';
 import 'package:todo/util/dialog_widget.dart';
 import 'package:todo/util/note_tile.dart';
 
@@ -10,24 +12,34 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List toDoList = [
-    ['Sign up for KodeCamp 4.0', false],
-    ['Watch Youtube video', false],
-  ];
+  //reference hive box
+  final _myNoteBox = Hive.box('note_box');
+  NotedDatabase db = NotedDatabase();
   final _controller = TextEditingController();
+
+  @override
+  void initState() {
+    if (_myNoteBox.get('NOTEDLIST') == null) {
+      db.createInitialData();
+    } else {
+      db.loadData();
+    }
+    super.initState();
+  }
 
   void checkBoxChanged(bool? value, int index) {
     setState(() {
-      toDoList[index][1] = !toDoList[index][1];
+      db.todoList[index][1] = !db.todoList[index][1];
     });
   }
 
   void saveNewTask() {
     setState(() {
-      toDoList.add([_controller.text, false]);
+      db.todoList.add([_controller.text, false]);
       _controller.clear();
     });
     Navigator.of(context).pop();
+    db.updateDatabase();
   }
 
   void createNewtask() {
@@ -45,7 +57,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void deleteTask(int index) {
     setState(() {
-      toDoList.removeAt(index);
+      db.todoList.removeAt(index);
+      db.updateDatabase();
     });
   }
 
@@ -67,11 +80,11 @@ class _MyHomePageState extends State<MyHomePage> {
           child: const Icon(Icons.add),
         ),
         body: ListView.builder(
-          itemCount: toDoList.length,
+          itemCount: db.todoList.length,
           itemBuilder: (context, index) {
             return NoteTile(
-              taskName: toDoList[index][0],
-              taskCompleted: toDoList[index][1],
+              taskName: db.todoList[index][0],
+              taskCompleted: db.todoList[index][1],
               onChanged: (value) => checkBoxChanged(value, index),
               deleteNote: (cotext) => deleteTask(index),
             );
