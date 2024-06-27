@@ -26,6 +26,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       toDoList.add([_controller.text, false]);
       _controller.clear();
+      print(toDoList);
     });
     Navigator.of(context).pop();
   }
